@@ -10,8 +10,6 @@ from pyRAPL import Measurement
 MODEL_NAME = "qwen2:1.5b"
 OUTPUT_FILE = os.path.join("results", "qwen2:1.5b.jsonl")
 DATASET_PATH = "mtbench101.jsonl"
-import os
-import sys
 
 # Check if energy_uj is readable
 ENERGY_UJ_PATH = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj"
@@ -22,7 +20,7 @@ if not os.access(ENERGY_UJ_PATH, os.R_OK):
         f"  sudo chmod o+r {ENERGY_UJ_PATH}\n"
         "Exiting."
     )
-    sys.exit(1)
+    exit(1)
 
 pyRAPL.setup()
 
