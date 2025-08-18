@@ -7,8 +7,8 @@ import ollama
 import pyRAPL
 from pyRAPL import Measurement
 
-MODEL_NAME = "stablelm2:1.6b"
-OUTPUT_FILE = os.path.join("results", "stablelm2-1.6b.jsonl")
+MODEL_NAME = "qwen2:0.5b"
+OUTPUT_FILE = os.path.join("results", "qwen2-0.5b.jsonl")
 DATASET_PATH = "mtbench101.jsonl"
 
 # Check if energy_uj is readable
@@ -245,6 +245,7 @@ def main():
     print(f"Average peak memory per inference: {avg_memory:.2f} MB")
     print(f"Baseline memory usage: {baseline_memory:.2f} MB")
     print(f"Results saved to: {OUTPUT_FILE}")
+    print(f"Finished at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 if __name__ == "__main__":
