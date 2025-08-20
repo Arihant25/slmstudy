@@ -7,8 +7,8 @@ import ollama
 import pyRAPL
 from pyRAPL import Measurement
 
-MODEL_NAME = "qwen2:0.5b"
-OUTPUT_FILE = os.path.join("results", "qwen2-0.5b.jsonl")
+MODEL_NAME = "tinyllama:1.1b"
+OUTPUT_FILE = os.path.join("results", "tinyllama-1.1b.jsonl")
 DATASET_PATH = "mtbench101.jsonl"
 
 # Check if energy_uj is readable
