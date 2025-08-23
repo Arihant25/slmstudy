@@ -204,22 +204,39 @@ def build_context_from_history(raw_history: List[Dict[str, str]]) -> str:
     if not raw_history:
         return ""
     if len(raw_history) == 1:
-        # Only final question, no earlier context
-        return f"User: {raw_history[-1].get('user','').strip()}"
+        # Only final question, no earlier context. Sanitize any <think> tags.
+        return f"User: {strip_think_tags(raw_history[-1].get('user',''))}"
     lines = []
     # All but last turn fully
     for pair in raw_history[:-1]:
-        user_msg = pair.get("user", "").strip()
-        bot_msg = pair.get("bot", "").strip()
+        # Sanitize both user and assistant messages to remove <think> blocks
+        user_msg = strip_think_tags(pair.get("user", ""))
+        bot_msg = strip_think_tags(pair.get("bot", ""))
         if user_msg:
             lines.append(f"User: {user_msg}")
         if bot_msg:
             lines.append(f"Assistant: {bot_msg}")
     # Final user message only
-    final_user = raw_history[-1].get("user", "").strip()
+    final_user = strip_think_tags(raw_history[-1].get("user", ""))
     if final_user:
         lines.append(f"User: {final_user}")
     return "\n".join(lines)
+
+
+def strip_think_tags(text: Optional[str]) -> str:
+    """Remove any content wrapped in <think>...</think> tags (including the tags).
+
+    Works on multiline text and is tolerant of missing closing tags.
+    """
+    if not text:
+        return ""
+    import re
+
+    # Remove any <think>...</think> blocks (non-greedy, DOTALL)
+    cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    # Also remove any leftover opening or closing tags
+    cleaned = re.sub(r"</?think>", "", cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
 
 
 def evaluate_response_with_gemini(
@@ -394,11 +411,18 @@ def main():
 
             print(f"Evaluating item {i+1}/{len(results)} (ID: {id})")
 
+
             task_type = result.get("task", "GR")
             model_response = result.get("response", "")
 
-            if not model_response.strip():
-                print(f"Skipping item {id} - no response")
+            # Sanitize the model response to remove any <think>...</think> sections
+            sanitized_response = strip_think_tags(model_response)
+
+            if not sanitized_response.strip():
+                print(f"Skipping item {id} - response empty after stripping <think> tags")
+                # Keep original result but ensure we record original_response if missing
+                if isinstance(result, dict) and "original_response" not in result:
+                    result["original_response"] = model_response
                 new_results.append(result)
                 continue
 
@@ -408,8 +432,9 @@ def main():
                 build_context_from_history(raw_history) if raw_history else None
             )
 
+            # Evaluate using the sanitized response
             evaluation = evaluate_response_with_gemini(
-                task_type, model_response, id, context=context_str
+                task_type, sanitized_response, id, context=context_str
             )
 
             evaluation.update(
@@ -432,8 +457,8 @@ def main():
             for k, v in result.items():
                 if k != "response" and k not in output_item:
                     output_item[k] = v
-            # Add 'response' as last field
-            output_item["response"] = model_response
+            # Add 'response' as last field (sanitized) and keep original_response
+            output_item["response"] = sanitized_response
 
             new_results.append(output_item)
 
