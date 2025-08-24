@@ -7,8 +7,8 @@ import ollama
 import pyRAPL
 from pyRAPL import Measurement
 
-MODEL_NAME = "gemma2:2b"
-OUTPUT_FILE = os.path.join("results", "gemma2-2b.jsonl")
+MODEL_NAME = "gemma3:1b"
+OUTPUT_FILE = os.path.join("results", "gemma3-1b.jsonl")
 DATASET_PATH = "mtbench101.jsonl"
 
 # Check if energy_uj is readable
